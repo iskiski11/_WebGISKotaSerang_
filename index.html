@@ -1,0 +1,978 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebGIS - Penelusuran Data Spasial</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #1a5d1a;
+            --secondary-color: #2a7a2a;
+            --accent-color: #3ca33c;
+            --text-color: #e6f2e6;
+            --bg-color: #0f3d0f;
+            --card-bg: #1e4e1e;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        header {
+            background-color: var(--primary-color);
+            padding: 1rem 0;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+        }
+        
+        .logo img {
+            width: 42px;
+            height: auto;
+            margin-right: 6px;
+        }
+        
+        .nav-links {
+            display: flex;
+            list-style: none;
+        }
+        
+        .nav-links li {
+            margin-left: 1.5rem;
+        }
+        
+        .nav-links a {
+            color: var(--text-color);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s;
+            padding: 0.5rem 0;
+            position: relative;
+        }
+        
+        .nav-links a:hover {
+            color: #ffffff;
+        }
+        
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 2px;
+            bottom: 0;
+            left: 0;
+            background-color: var(--text-color);
+            transition: width 0.3s;
+        }
+        
+        .nav-links a:hover::after {
+            width: 100%;
+        }
+        
+        .active {
+            color: #ffffff;
+        }
+        
+        .active::after {
+            width: 100%;
+        }
+        
+        section {
+            padding: 3rem 0;
+            scroll-margin-top: 80px;
+        }
+        
+        .section-title {
+            font-size: 2rem;
+            margin-bottom: 1.5rem;
+            text-align: center;
+            color: var(--text-color);
+            position: relative;
+            padding-bottom: 10px;
+        }
+        
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 3px;
+            background-color: var(--accent-color);
+        }
+        
+        /* Hero Section */
+        .hero {
+            position: relative;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+        
+        .video-background {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            overflow: hidden;
+            filter: blur(2px) brightness(0.7);
+        }
+        
+        .video-background video {
+            min-width: 100%;
+            min-height: 100%;
+            width: auto;
+            height: auto;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+        
+        .hero .container {
+            position: relative;
+            z-index: 1;
+        }
+        
+        .hero h1 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            color: var(--text-color);
+        }
+        
+        .hero p {
+            font-size: 1.2rem;
+            max-width: 800px;
+            margin: 0 auto 2rem;
+        }
+        
+        .btn {
+            display: inline-block;
+            background-color: var(--accent-color);
+            color: white;
+            padding: 0.8rem 1.5rem;
+            border-radius: 4px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: background-color 0.3s;
+            border: none;
+            cursor: pointer;
+        }
+        
+        .btn:hover {
+            background-color: var(--secondary-color);
+        }
+        
+        /* Map Section */
+        .map-container-wrapper {
+            position: sticky;
+            top: 80px;
+            z-index: 90;
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        .map-controls {
+            background-color: var(--card-bg);
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+        
+        .map-controls select, .map-controls input {
+            padding: 0.5rem;
+            border-radius: 4px;
+            border: 1px solid var(--accent-color);
+            background-color: var(--primary-color);
+            color: var(--text-color);
+        }
+        
+        .map-controls button {
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        .map-controls button:hover {
+            background-color: var(--secondary-color);
+        }
+        
+        .map-container {
+            position: relative;
+            height: 500px;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        #map {
+            height: 100%;
+            width: 100%;
+        }
+        
+        /* Data Section */
+        .data-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+            background-color: var(--primary-color);
+            padding: 5rem;
+            border-radius: 12px;
+        }
+        
+        .data-card {
+            background-color: var(--card-bg);
+            border-radius: 8px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        
+        .data-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        .data-card h3 {
+            font-size: 1.3rem;
+            margin-bottom: 1rem;
+            color: var(--text-color);
+        }
+        
+        .data-card p {
+            margin-bottom: 1rem;
+            color: #d9ead9;
+        }
+        
+        .data-card .stat {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: var(--accent-color);
+        }
+        
+        /* Creator Section */
+        .creator {
+            background-color: var(--secondary-color);
+            padding: 4rem 0;
+        }
+        
+        .creator-content {
+            display: flex;
+            align-items: justify;
+            gap: 3rem;
+        }
+        
+        .creator-image {
+            flex: 1;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        .creator-image img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+        
+        .creator-info {
+            flex: 1;
+            text-align: justify;
+        }
+        
+        .creator-info h3 {
+            font-size: 1.8rem;
+            margin-bottom: 1rem;
+        }
+        
+        .creator-info p {
+            margin-bottom: 9.4rem;
+        }
+        
+        .social-links {
+            display: flex;
+            gap: 1rem;
+        }
+        
+        .social-links a {
+            color: var(--text-color);
+            font-size: 1.5rem;
+            transition: color 0.3s;
+        }
+        
+        .social-links a:hover {
+            color: #ffffff;
+        }
+        
+        /* Footer */
+        footer {
+            background-color: var(--primary-color);
+            padding: 2rem 0;
+            text-align: center;
+        }
+        
+        footer p {
+            margin-bottom: 1rem;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+            
+            .hero h1 {
+                font-size: 2.2rem;
+            }
+            
+            .map-controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .creator-content {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .creator-image {
+                width: 100%;
+            }
+            
+            .social-links {
+                justify-content: center;
+            }
+            
+            .map-container-wrapper {
+                top: 60px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <nav>
+                <div class="logo">
+                    <img src="Assets/LOGO_KOTA_SERANG.png" alt="Logo" width="42">
+                    <span>WebGIS Kota Serang</span>
+                </div>
+                <ul class="nav-links">
+                    <li><a href="#home" class="active">Beranda</a></li>
+                    <li><a href="#map-section">Peta</a></li>
+                    <li><a href="#data-section">Data</a></li>
+                    <li><a href="#creator-section">Pembuat</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+    
+    <section class="hero" id="home">
+        <div class="video-background">
+            <video autoplay muted loop playsinline>
+                <source src="Assets/Cinematic_Kota_Serang (1).mp4" type="video/mp4">
+            </video>
+        </div>
+        <div class="container">
+            <h1>Selamat Datang di Website GIS Kota Serang</h1>
+            <p>Platform web GIS yang menyediakan visualisasi data spasial yang divisualisasikan menjadi peta untuk analisis dan pengambilan keputusan berbasis lokasi.</p>
+            <a href="#map-section" class="btn">Eksplor Peta</a>
+        </div>
+    </section>
+    
+    <section id="map-section">
+        <div class="container">
+            <h2 class="section-title">Peta Persebaran Fasilitas - Fasilitas di Wilayah Kota Serang</h2>
+            
+            <!-- Map container wrapper yang sticky -->
+            <div class="map-container-wrapper">
+                <div class="map-controls">
+                    <select id="layer-selector">
+                        <option value="osm">OpenStreetMap</option>
+                        <option value="satellite">Satelit</option>
+                        <option value="topo">Topografi</option>
+                        <option value="google-satellite">Google Satellite</option>
+                        <option value="google-terrain">Google Terrain</option>
+                    </select>
+                    
+                    <select id="data-layer">
+                        <option value="none">Batas Administrasi</option>
+                        <option value="hospital">Rumah Sakit</option>
+                        <option value="puskesmas">Puskesmas</option>
+                        <option value="education">Fasilitas Pendidikan</option>
+                        <option value="commerce">Niaga</option>
+                        <option value="government">Kantor Pemerintahan</option>
+                        <option value="worship">Sarana Ibadah</option>
+                    </select>
+                    
+                    <input type="text" id="search-location" placeholder="Cari lokasi di Kota Serang, Banten...">
+                    <button id="search-btn"><i class="fas fa-search"></i> Cari</button>
+                    <button id="reset-view"><i class="fas fa-sync-alt"></i> Reset Tampilan</button>
+                </div>
+                
+                <div class="map-container">
+                    <div id="map"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <section id="data-section">
+    <div class="container">
+        <h2 class="section-title">Data</h2>
+        
+        <div class="data-cards">
+            <div class="data-card">
+                <h3>Rumah Sakit</h3>
+                <p>Total Titik Rumah Sakit di Kota Serang:</p>
+                <div class="stat">4 Titik</div>
+            </div>
+            
+            <div class="data-card">
+                <h3>Puskesmas</h3>
+                <p>Total Titik Puskesmas di Kota Serang:</p>
+                <div class="stat">7 Titik</div>
+            </div>
+            
+            <div class="data-card">
+                <h3>Fasilitas Pendidikan</h3>
+                <p>Total Titik Fasilitas Pendidikan di Kota Serang:</p>
+                <div class="stat">145 Titik</div>
+            </div>
+            
+            <div class="data-card">
+                <h3>Niaga</h3>
+                <p>Total Titik Niaga di Kota Serang:</p>
+                <div class="stat">8 Titik</div>
+            </div>
+            
+            <div class="data-card">
+                <h3>Kantor Pemerintahan</h3>
+                <p>Total Titik Kantor Pemerintahan di Kota Serang:</p>
+                <div class="stat">104 Titik</div>
+            </div>
+            
+            <div class="data-card">
+                <h3>Sarana Ibadah</h3>
+                <p>Total Titik Sarana Ibadah di Kota Serang:</p>
+                <div class="stat">112 Titik</div>
+            </div>
+        </div>
+    </div>
+</section>
+    
+    <section id="creator-section">
+        <div class="container">
+            <h2 class="section-title">Tentang Pembuat</h2>
+            
+            <div class="creator-content">
+                <div class="creator-image">
+                    <img src="./Assets/DSC_4669.JPG" alt="Pembuat WebGIS">
+                </div>
+                
+                <div class="creator-info">
+                    <h3>Muhammad Rizki Fauzan</h3>
+                    <p>Saya adalah mahasiswa dari Program Studi Sains Informasi Geografi, Fakultas Pendidikan Ilmu Pengetahuan Sosial, Universitas Pendidikan Indonesia di Bandung.
+                        Tujuan saya membuat website GIS ini adalah untuk memperluas ilmu geospasial agar ilmu tersebut banyak dikenal oleh masyarakat luas dan memiliki peran yang sangat penting.</p>
+                    
+                    <div class="social-links">
+                        <a href="https://wa.me/qr/IJJELJO7SF4WP1"><i class="fab fa-whatsapp"></i></a>
+                        <a href="https://www.tiktok.com/@_strikeS_"><i class="fab fa-tiktok"></i></a>
+                        <a href="https://www.instagram.com/rzzkfzan_?igsh=MXdlbThmYjE0c2hzag=="><i class="fab fa-instagram"></i></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 WebGIS - Penelusuran Data Spasial. Seluruh hak dilindungi.</p>
+            <p>Dibuat dengan <i class="fas fa-heart"></i> oleh Muhammad Rizki Fauzan</p>
+        </div>
+    </footer>
+    
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        // Inisialisasi peta dengan lokasi Kota Serang, Banten
+        const map = L.map('map').setView([-6.4147, 106.3664], 12);
+        
+        // Tambahkan lapisan peta dasar
+        const baseLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyrightOpenStreetMap</a> contributors'
+        }).addTo(map);
+        
+        // Lapisan alternatif
+        const satelliteLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/Server/t/{z}/{y}/{x}', {
+            attribution: 'Tiles &copy; Es &mdash; Source: Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, GIS User Community'
+        });
+        const topoLayer = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
+            attribution: 'Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenMap</a> contributors <a href="http://viewfinderpanoramas.org">SM</a> | Map style: &copy; <a href="http://viewfinderpanoramas.org">OpenTopoMap</a> (<a href="https://creativecommons.org/licenses/by-sa/3.0/">CC-BY-SA</a>)'
+        });
+        
+        // Lapisan Google Maps (memerlukan API Key Google Maps)
+        // Ini adalah contoh placeholder - untuk penggunaan nyata, Anda perlu mendapatkan API Key Google Maps Anda sendiri
+        const googleSatelliteLayer = L.tileLayer('https://mt1.googleapis.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
+            attribution: '© Google'
+        });
+        const googleTerrainLayer = L.tileLayer('https://mt1.googleapis.com/vt/lyrs=p&x={x}&y={y}&z={z}', {
+            attribution: '© Google'
+        });
+        
+        // Simpan semua lapisan dalam objek
+        const layers = {
+            osm: baseLayer,
+            satellite: satelliteLayer,
+            topo: topoLayer,
+            'google-satellite': googleSatelliteLayer,
+            'google-terrain': googleTerrainLayer
+        };
+        
+        // Warna unik untuk setiap jenis data
+        const layerColors = {
+            hospital: "#e74c3c", // Merah
+            puskesmas: "#3498db", // Biru
+            education: "#2ecc71", // Hijau
+            commerce: "#f39c12", // Orange
+            government: "#9b59b6", // Ungu
+            worship: "#1abc9c" // Turquoise
+        };
+        
+        // Simbolisasi untuk berbagai jenis data
+        function getLayerStyle(layerType) {
+            return {
+                radius: 5,
+                fillColor: layerColors[layerType],
+                color: "#000",
+                weight: 1,
+                opacity: 1,
+                fillOpacity: 0.8
+            };
+        }
+        
+        // Fungsi untuk menghapus semua marker dari peta
+        function clearMarkers() {
+            if (window.adminLayer) map.removeLayer(window.adminLayer);
+            if (window.hospitalLayer) map.removeLayer(window.hospitalLayer);
+            if (window.puskesmasLayer) map.removeLayer(window.puskesmasLayer);
+            if (window.educationLayer) map.removeLayer(window.educationLayer);
+            if (window.commerceLayer) map.removeLayer(window.commerceLayer);
+            if (window.governmentLayer) map.removeLayer(window.governmentLayer);
+            if (window.worshipLayer) map.removeLayer(window.worshipLayer);
+        }
+        
+        // Fungsi untuk menambahkan batas administrasi ke peta sebagai chrolopeth
+        function addAdminDataToMapAsChoropleth() {
+            if (window.adminLayer) {
+                map.removeLayer(window.adminLayer);
+            }
+            
+            window.adminLayer = new L.LayerGroup();
+            
+            $.getJSON("./Assets/Kota Serang-KECAMATAN/Kota Serang-KECAMATAN.geojson", function(shape) {
+                L.geoJSON(shape, {
+                    style: function(feature) {
+                        // Misalnya, Anda dapat menggunakan properti 'KECAMATAN' untuk warna
+                        // Anda perlu menyesuaikan ini dengan properti yang ada dalam data Anda
+                        const kecamatan = feature.properties.nama || 'Unknown';
+                        return {
+                            fillColor: getColorForKecamatan(kecamatan), // Fungsi untuk mendapatkan warna
+                            weight: 2,
+                            opacity: 1,
+                            color: '#000000',
+                            dashArray: '3',
+                            fillOpacity: 0.7
+                        };
+                    },
+                    onEachFeature: function(feature, layer) {
+                        // Tambahkan popup dengan informasi kecamatan
+                        layer.bindPopup(`
+                            <b>${feature.properties.nama || 'Unknown'}</b><br>
+                        `);
+                    }
+                }).addTo(window.adminLayer);
+                
+                adminLayer.addTo(map);
+            }).fail(function(error) {
+                console.error('Error loading admin data:', error);
+            });
+        }
+        
+        // Fungsi untuk mendapatkan warna berdasarkan nama kecamatan
+        function getColorForKecamatan(kecamatan) {
+            // Anda dapat menyesuaikan warna ini sesuai kebutuhan
+            const colors = {
+                'Kecamatan Serang': '#4FC3F7',
+                'Kecamatan Walantaka': '#81C784',
+                'Kecamatan Kasemen': '#37474F',
+                'Kecamatan Curug': '#FFD54F',
+                'Kecamatan Taktakan': '#FFFFFF',
+                'Kecamatan Cipocok Jaya': '#E0E0E0',
+                // Tambahkan kecamatan lainnya sesuai dengan data Anda
+            };
+            
+            return colors[kecamatan] || '#999999'; // Warna default jika kecamatan tidak ditemukan
+        }
+        
+        // Fungsi untuk menambahkan data Rumah Sakit ke peta
+        function addHospitalDataToMap() {
+            if (window.hospitalLayer) {
+                map.removeLayer(window.hospitalLayer);
+            }
+            
+            window.hospitalLayer = new L.LayerGroup();
+            
+            $.getJSON("./Assets/Kota Serang-KECAMATAN/RUMAHSAKIT_PT_25K.geojson", function(data) {
+                L.geoJSON(data, {
+                    pointToLayer: function(feature, latlng) {
+                        return L.circleMarker(latlng, getLayerStyle('hospital'));
+                    },
+                    onEachFeature: function(feature, layer) {
+                        // Pastikan bahwa NAMAOBJ ada dalam properti fitur
+                        const name = feature.properties.NAMOBJ || 'Nama tidak tersedia';
+                        
+                        layer.bindPopup(`
+                            <b>${name}</b><br>
+                        `);
+                    }
+                }).addTo(hospitalLayer);
+                
+                hospitalLayer.addTo(map);
+            }).fail(function(error) {
+                console.error('Error loading hospital data:', error);
+            });
+        }
+        
+        // Fungsi untuk menambahkan data Puskesmas ke peta
+        function addPuskesmasDataToMap() {
+            if (window.puskesmasLayer) {
+                map.removeLayer(window.puskesmasLayer);
+            }
+            
+            window.puskesmasLayer = new L.LayerGroup();
+            
+            $.getJSON("./Assets/Kota Serang-KECAMATAN/PUSKESMAS_PT_25K.geojson", function(data) {
+                L.geoJSON(data, {
+                    pointToLayer: function(feature, latlng) {
+                        return L.circleMarker(latlng, getLayerStyle('puskesmas'));
+                    },
+                    onEachFeature: function(feature, layer) {
+                        // Pastikan bahwa NAMAOBJ ada dalam properti fitur
+                        const name = feature.properties.NAMOBJ || 'Nama tidak tersedia';
+                        
+                        layer.bindPopup(`
+                            <b>${name}</b><br>
+                        `);
+                    }
+                }).addTo(puskesmasLayer);
+                
+                puskesmasLayer.addTo(map);
+            }).fail(function(error) {
+                console.error('Error loading puskesmas data:', error);
+            });
+        }
+        
+        // Fungsi untuk menambahkan data Fasilitas Pendidikan ke peta
+        function addEducationDataToMap() {
+            if (window.educationLayer) {
+                map.removeLayer(window.educationLayer);
+            }
+            
+            window.educationLayer = new L.LayerGroup();
+            
+            $.getJSON("./Assets/Kota Serang-KECAMATAN/PENDIDIKAN_PT_25K.geojson", function(data) {
+                L.geoJSON(data, {
+                    pointToLayer: function(feature, latlng) {
+                        return L.circleMarker(latlng, getLayerStyle('education'));
+                    },
+                    onEachFeature: function(feature, layer) {
+                        // Pastikan bahwa NAMAOBJ ada dalam properti fitur
+                        const name = feature.properties.NAMOBJ || 'Nama tidak tersedia';
+                        
+                        layer.bindPopup(`
+                            <b>${name}</b><br>
+                        `);
+                    }
+                }).addTo(educationLayer);
+                
+                educationLayer.addTo(map);
+            }).fail(function(error) {
+                console.error('Error loading education data:', error);
+            });
+        }
+        
+        // Fungsi untuk menambahkan data Niaga ke peta
+        function addCommerceDataToMap() {
+            if (window.commerceLayer) {
+                map.removeLayer(window.commerceLayer);
+            }
+            
+            window.commerceLayer = new L.LayerGroup();
+            
+            $.getJSON("./Assets/Kota Serang-KECAMATAN/NIAGA_PT_25K.geojson", function(data) {
+                L.geoJSON(data, {
+                    pointToLayer: function(feature, latlng) {
+                        return L.circleMarker(latlng, getLayerStyle('commerce'));
+                    },
+                    onEachFeature: function(feature, layer) {
+                        // Pastikan bahwa NAMAOBJ ada dalam properti fitur
+                        const name = feature.properties.NAMOBJ || 'Nama tidak tersedia';
+                        
+                        layer.bindPopup(`
+                            <b>${name}</b><br>
+                        `);
+                    }
+                }).addTo(commerceLayer);
+                
+                commerceLayer.addTo(map);
+            }).fail(function(error) {
+                console.error('Error loading commerce data:', error);
+            });
+        }
+        
+        // Fungsi untuk menambahkan data Kantor Pemerintahan ke peta
+        function addGovernmentDataToMap() {
+            if (window.governmentLayer) {
+                map.removeLayer(window.governmentLayer);
+            }
+            
+            window.governmentLayer = new L.LayerGroup();
+            
+            $.getJSON("./Assets/Kota Serang-KECAMATAN/PEMERINTAHAN_PT_25K.geojson", function(data) {
+                L.geoJSON(data, {
+                    pointToLayer: function(feature, latlng) {
+                        return L.circleMarker(latlng, getLayerStyle('government'));
+                    },
+                    onEachFeature: function(feature, layer) {
+                        // Pastikan bahwa NAMAOBJ ada dalam properti fitur
+                        const name = feature.properties.NAMOBJ || 'Nama tidak tersedia';
+                        
+                        layer.bindPopup(`
+                            <b>${name}</b><br>
+                        `);
+                    }
+                }).addTo(governmentLayer);
+                
+                governmentLayer.addTo(map);
+            }).fail(function(error) {
+                console.error('Error loading government data:', error);
+            });
+        }
+        
+        // Fungsi untuk menambahkan data Sarana Ibadah ke peta
+        function addWorshipDataToMap() {
+            if (window.worshipLayer) {
+                map.removeLayer(window.worshipLayer);
+            }
+            
+            window.worshipLayer = new L.LayerGroup();
+            
+            $.getJSON("./Assets/Kota Serang-KECAMATAN/SARANAIBADAH_PT_25K.geojson", function(data) {
+                L.geoJSON(data, {
+                    pointToLayer: function(feature, latlng) {
+                        return L.circleMarker(latlng, getLayerStyle('worship'));
+                    },
+                    onEachFeature: function(feature, layer) {
+                        // Pastikan bahwa NAMAOBJ ada dalam properti fitur
+                        const name = feature.properties.NAMOBJ || 'Nama tidak tersedia';
+                        
+                        layer.bindPopup(`
+                            <b>${name}</b><br>
+                        `);
+                    }
+                }).addTo(worshipLayer);
+                
+                worshipLayer.addTo(map);
+            }).fail(function(error) {
+                console.error('Error loading worship data:', error);
+            });
+        }
+    
+        // Fungsi pencarian lokasi
+        document.getElementById('search-btn').addEventListener('click', function() {
+            const searchTerm = document.getElementById('search-location').value.trim();
+            
+            if (searchTerm) {
+                // Simulasi pencarian lokasi
+                // Dalam implementasi nyata, Anda akan menggunakan API geocoding
+                const notification = document.createElement('div');
+                notification.style.position = 'fixed';
+                notification.style.top = '20px';
+                notification.style.left = '50%';
+                notification.style.transform = 'translateX(-50%)';
+                notification.style.backgroundColor = 'var(--primary-color)';
+                notification.style.color = 'var(--text-color)';
+                notification.style.padding = '10px 20px';
+                notification.style.borderRadius = '4px';
+                notification.style.boxShadow = '0 2px 10px rgba(0, 0, 0, 0.2)';
+                notification.style.zIndex = '1000';
+                notification.textContent = 'Lokasi tidak ditemukan di Kota Serang, Banten. Silakan coba kata kunci lain.';
+                
+                document.body.appendChild(notification);
+                
+                // Hapus notifikasi setelah 3 detik
+                setTimeout(() => {
+                    document.body.removeChild(notification);
+                }, 3000);
+            }
+            
+            // Hapus semua titik dari peta
+            clearMarkers();
+        });
+        
+        // Reset tampilan peta
+        document.getElementById('reset-view').addEventListener('click', function() {
+            map.setView([-6.07011, 106.09059], 11.2);
+        });
+        
+        // Fungsi untuk mengganti lapisan peta
+        document.getElementById('layer-selector').addEventListener('change', function() {
+            const selectedLayer = this.value;
+            
+            // Hapus semua lapisan
+            Object.values(layers).forEach(layer => {
+                map.removeLayer(layer);
+            });
+            
+            // Tambahkan lapisan yang dipilih
+            layers[selectedLayer].addTo(map);
+        });
+        
+        // Fungsi untuk mengganti lapisan data
+        document.getElementById('data-layer').addEventListener('change', function() {
+            const dataLayer = this.value;
+            
+            // Hapus semua titik data
+            clearMarkers();
+            
+            // Selalu menampilkan batas administrasi sebagai chrolopeth
+            addAdminDataToMapAsChoropleth();
+            
+            // Tambahkan lapisan data yang dipilih
+            switch (dataLayer) {
+                case 'hospital':
+                    addHospitalDataToMap();
+                    break;
+                case 'puskesmas':
+                    addPuskesmasDataToMap();
+                    break;
+                case 'education':
+                    addEducationDataToMap();
+                    break;
+                case 'commerce':
+                    addCommerceDataToMap();
+                    break;
+                case 'government':
+                    addGovernmentDataToMap();
+                    break;
+                case 'worship':
+                    addWorshipDataToMap();
+                    break;
+                default:
+                    // Jika pilihan adalah "Batas Administrasi", hanya menampilkan batas administrasi saja
+                    break;
+            }
+        });
+        
+        // Smooth scrolling untuk navigasi
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function(e) {
+                e.preventDefault();
+                
+                const targetId = this.getAttribute('href');
+                const targetElement = document.querySelector(targetId);
+                
+                if (targetElement) {
+                    window.scrollTo({
+                        top: targetElement.offsetTop - 80,
+                        behavior: 'smooth'
+                    });
+                    
+                    // Update kelas active
+                    document.querySelectorAll('.nav-links a').forEach(link => {
+                        link.classList.remove('active');
+                    });
+                    this.classList.add('active');
+                }
+            });
+        });
+        
+        // Update kelas active saat menggulir
+        window.addEventListener('scroll', function() {
+            const sections = document.querySelectorAll('section');
+            const navLinks = document.querySelectorAll('.nav-links a');
+            let current = '';
+            
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop;
+                const sectionHeight = section.offsetHeight;
+                
+                if (pageYOffset >= sectionTop - 100) {
+                    current = section.getAttribute('id');
+                }
+            });
+            
+            navLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === `#${current}`) {
+                    link.classList.add('active');
+                }
+            });
+        });
+        
+        // Panggil fungsi untuk menambahkan batas administrasi saat memuat peta
+        addAdminDataToMapAsChoropleth();
+    </script>
+</body>
+</html>

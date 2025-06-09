@@ -1,0 +1,6 @@
+{"type":"FeatureCollection", "features":[
+{"type":"Feature","geometry":{"type":"Point","coordinates":[106.18718193600019,-6.16480788999997,0]},"properties":{"NAMOBJ":"Rumah Sakit Umum Daerah Banten","FCODE":null,"LCODE":"GI0020","REMARK":"Rumah Sakit Umum","METADATA":null,"SRS_ID":null,"TIPRST":0,"JPLYRS":1,"ALAMAT":null}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[106.14988760100017,-6.118771838999984,0]},"properties":{"NAMOBJ":"Rumah Sakit Umum Ibunda","FCODE":null,"LCODE":"GI0020","REMARK":"Rumah Sakit Umum","METADATA":null,"SRS_ID":null,"TIPRST":0,"JPLYRS":1,"ALAMAT":null}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[106.15256342900018,-6.12009406399995,0]},"properties":{"NAMOBJ":"Rumah Sakit Umum Daerah Serang","FCODE":null,"LCODE":"GI0020","REMARK":"Rumah Sakit Umum","METADATA":null,"SRS_ID":null,"TIPRST":0,"JPLYRS":1,"ALAMAT":null}},
+{"type":"Feature","geometry":{"type":"Point","coordinates":[106.15286457700019,-6.116468157999982,0]},"properties":{"NAMOBJ":"Kantor Pos Serang","FCODE":null,"LCODE":"GI0020","REMARK":"Rumah Sakit Umum","METADATA":null,"SRS_ID":null,"TIPRST":0,"JPLYRS":1,"ALAMAT":null}}
+]}
